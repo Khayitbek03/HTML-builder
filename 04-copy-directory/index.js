@@ -1,29 +1,41 @@
 const fs = require('fs').promises;
 const path = require('path');
 
+async function copyDir(
+  source,
+  destination,
+  options = { recursive: false, destFolderCleared: false },
+) {
+  try {
+    if (!options.destFolderCleared) {
+      await fs.rm(destination, { recursive: true, force: true });
+    }
+
+    await fs.mkdir(destination);
+
+    const dirEntries = await fs.readdir(source, { withFileTypes: true });
+
+    for (const dirent of dirEntries) {
+      const sourcePath = path.join(source, dirent.name);
+      const destinationPath = path.join(destination, dirent.name);
+
+      if (dirent.isFile()) {
+        await fs.copyFile(sourcePath, destinationPath);
+      }
+
+      if (dirent.isDirectory() && options.recursive) {
+        await copyDir(sourcePath, destinationPath, {
+          recursive: true,
+          destFolderCleared: true,
+        });
+      }
+    }
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 const source = path.join(__dirname, 'files');
 const destination = path.join(__dirname, 'files-copy');
 
-async function copyDir(source, destination) {
-  try {
-    await fs.mkdir(destination, { recursive: true });
-
-    const files = await fs.readdir(source);
-
-    for (const file of files) {
-      const sourcePath = path.join(source, file);
-      const destinationPath = path.join(destination, file);
-      //to know whether the file directory or not
-      const stats = await fs.stat(sourcePath);
-
-      if (stats.isDirectory()) {
-        await copyDir(sourcePath, destinationPath);
-      } else {
-        await fs.copyFile(sourcePath, destinationPath);
-      }
-    }
-  } catch (error) {
-    console.log(error);
-  }
-}
-copyDir(source, destination);
+copyDir(source, destination, { recursive: true });
