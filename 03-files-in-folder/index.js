@@ -8,10 +8,13 @@ const folderPath = path.join(__dirname, 'secret-folder');
     const dirEnts = await fs.readdir(folderPath, { withFileTypes: true });
     for (const dirEnt of dirEnts) {
       if (!dirEnt.isFile()) continue;
-      const filePath = path.join(folderPath, dirEnt.name);
-      const fileInfo = path.parse(filePath);
-      const fileSize = await fs.stat(filePath);
-      const fileSizeInBytes = fileSize.size;
+      let filePath = path.join(folderPath, dirEnt.name);
+      let fileInfo = path.parse(filePath);
+      let fileSize = await fs.stat(filePath);
+      let fileSizeInBytes = fileSize.size;
+
+      fileInfo.name = fileInfo.name.replace(/^\./, '');
+      fileInfo.ext = fileInfo.ext.replace(/^\./, '');
       console.log(
         `${fileInfo.name} - ${fileInfo.ext} - ${fileSizeInBytes}bytes`,
       );
